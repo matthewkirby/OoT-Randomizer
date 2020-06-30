@@ -20,6 +20,7 @@ from OcarinaSongs import replace_songs
 from MQ import patch_files, File, update_dmadata, insert_space, add_relocations
 from SaveContext import SaveContext
 import StartingItems
+from SignUpdater import replace_overworld_signs
 
 
 def patch_rom(spoiler:Spoiler, world:World, rom:Rom):
@@ -1534,6 +1535,9 @@ def patch_rom(spoiler:Spoiler, world:World, rom:Rom):
 
         # Update grotto actors based on their new entrance
         set_grotto_shuffle_data(rom, world)
+
+    if True: # This should be changed later to check for entrance randomizer
+        replace_overworld_signs(messages, world)
 
     if world.shuffle_cows:
         rom.write_byte(rom.sym('SHUFFLE_COWS'), 0x01)
