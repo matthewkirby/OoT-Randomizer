@@ -1,66 +1,76 @@
 from World import World
-from Messages import update_message_by_id
-
-# Color can be added to dungeons and whatnot in the REGION NAMES section
+from Messages import update_message_by_id, get_message_by_id
 
 # Complex things to replace
 # 0x300A - has an option to ask about dc
 # 0x300D - Comes up when you ask about dc in 0x300A
 
+# COULD ADD A NEW FUNCTION TO CENTER TEXT.
+# - Would need to know length of each character in pixels
+# - Would need max length of text in pixels
+# - Can then compute how much spec to prepend to a line.
+
+# CHANGE WHERE SIGN ACTORS POINT FOR DUPLICATES, NEW MESSAGES SHOULD BE 0X9000+
+# - 0x9000-0x9003 are used.
+
 DUNGEON_SIGNS = {
-    0x0307: [['Kakariko Village -> Bottom of the Well']," Dark! Narrow! Scary!\x01{}"],
-    0x030A: ['Dodongos Cavern Entryway -> Dodongos Cavern Beginning', "{}\x01Don't enter without permission!"],
-    0x0312: ['KF Outside Deku Tree -> Deku Tree Lobby', "Just ahead:\x01{}"],
-    0x031B: ['Gerudo Fortress -> Gerudo Training Grounds Lobby', "{}\x01Only registered members are\x01allowed!"],
+    0x0307: [['Kakariko Village -> Bottom of the Well']," Dark! Narrow! Scary!\x01{}", 0x13],
+    0x030A: [['Dodongos Cavern Entryway -> Dodongos Cavern Beginning'], "{}\x01Don't enter without permission!", 0x13],
+    0x0312: [['KF Outside Deku Tree -> Deku Tree Lobby'], "Just ahead:\x01{}", 0x13],
+    0x031B: [['Gerudo Fortress -> Gerudo Training Grounds Lobby'], "{}\x01Only registered members are\x01allowed!", 0x13],
     # 0x6013: GTG with no card
     # 0x6014: GTG with card
 }
 
 INDOORS_SIGNS = {
-    0x020E: [['Kakariko Village -> Kak Potion Shop Front'], "{}\x01Closed until morning"], # Potion Shop at night, Color the location name light blue
-    0x020F: [['Kakariko Village -> Kak Shooting Gallery'], "{}\x01Open only during the day"], # Kak shooting gallery (check child message), color location light blue
-    0x0211: [['Kakariko Village -> Kak Bazaar'], "{}\x01Open only during the day"], # Kak Bazaar at night (is this the same message as child?), color location light blue
-    0x023A: [['Lake Hylia -> LH Fishing Hole'], "{}"],
+    0x020E: [['Kakariko Village -> Kak Potion Shop Front'], "kakdoor:{}\x01Closed until morning", 0x20], # Potion Shop at night ALSO USED IN MARKET
+    0x020F: [['Kakariko Village -> Kak Shooting Gallery'], "kakdoor:{}\x01Open only during the day", 0x20], # Kak shooting gallery (check child message)
+    0x0210: [['Market -> Market Mask Shop'], "{}\x01Now hiring part-time\x01Apply during the day", 0x20], # Mask shop door ALSO USED IN MARKET
+    0x0211: [['Kakariko Village -> Kak Bazaar'], "kakdoor:{}\x01Open only during the day", 0x20], # Kak Bazaar at night ALSO USED IN MARKET
+    0x023A: [['Lake Hylia -> LH Fishing Hole'], "{}", 0x20],
     # 0x0301: Hyrule Field (GV -> field, lake->field, kak->field)
     # 0x0302: Hyrule Castle Town
     # 0x0303: The Temple of Time
     # 0x030F: Zoras fountain dont disturb lord jabu jabu --king zora xvi
     # 0x0313: Forest Temple
-    0x0318: [['Lake Hylia -> LH Lab'], "{}"],
+    0x0318: [['Lake Hylia -> LH Lab'], "{}", 0x13],
     
     # 0x031D: Spirit Temple
-    0x031E: [['Kokiri Forest -> KF Kokiri Shop'], "{}"],
-    0x031F: [['Kokiri Forest -> KF Links House'], "{}"],
+    0x031E: [['Kokiri Forest -> KF Kokiri Shop'], "{}", 0x13],
+    0x031F: [['Kokiri Forest -> KF Links House'], "{}", 0x13],
     # 0x032D: moutain summit danger ahead - keep out
-    0x0333: [['Zoras Domain -> ZD Shop'], "{}"],
-    0x033C: [['Kokiri Forest -> KF Midos House'], "{}"],
-    0x033D: [['Kokiri Forest -> KF Know It All House'], "{}"],
-    0x033E: [['Kokiri Forest -> KF House of Twins'], "{}"],
-    0x033F: [['Kokiri Forest -> KF Sarias House'], "{}"],
+    0x0333: [['Zoras Domain -> ZD Shop'], "{}", 0x13],
+    0x033C: [['Kokiri Forest -> KF Midos House'], "{}", 0x13],
+    0x033D: [['Kokiri Forest -> KF Know It All House'], "{}", 0x13],
+    0x033E: [['Kokiri Forest -> KF House of Twins'], "{}", 0x13],
+    0x033F: [['Kokiri Forest -> KF Sarias House'], "{}", 0x13],
     # 0x0345: visit the house of the know it all brothers to get answers to all your item-related questions
 }
 
 OW_SIGNS = {
     # 0x0305: [['Hyrule Field -> Kakariko Village'], "{}"], # This sign is in 2 spots. I think I need to make a new one! field->kak and dmt->kak
-    0x0306: [['Kakariko Village -> Graveyard'], "{}"],
-    0x0308: [['Kak Behind Gate -> Death Mountain'], "{}"],
-    0x030B: [['Death Mountain -> Goron City'], "{}"],
-    0x030C: [['Hyrule Field -> ZR Front'], "{}"],
-    0x0314: [['Kokiri Forest -> Lost Woods'], "{}"],
-    0x0315: [['Hyrule Field -> Lon Lon Ranch'], "{}"],
-    0x0316: [['Hyrule Field -> Lon Lon Ranch'], "{}"],
-    0x0317: [['Hyrule Field -> Lake Hylia'], "{}"],
-    # 0x0319: [['Hyrule Field -> Gerudo Valley'], "{}"], # This sign is also in gf pointing to gv
-    0x031C: [['GF Outside Gate -> Wasteland Near Fortress'], "{}"], # hw if you chase a mirage... MAKE SUR EITS NOT IN COLOSSSUS
-    0x0320: [['Kokiri Forest -> LW Bridge From Forest'], "{}"],
-    0x0321: [['Death Mountain -> Goron City'], "Follow the trail along the edge of\x01the cliff and you will reach\x01{}"],
-    0x0323: [['Death Mountain Summit -> DMC Upper Local'], "Death Mountain Summit\x01Entrance to {}\x01ahead"], # Color 'Death Mountain Summit'
-    0x6069: [['GV Fortress Side -> Gerudo Fortress'], "{} is located beyond this gate.\x01A kid like you has no business there."],
+    0x0306: [['Kakariko Village -> Graveyard'], "{}", 0x13],
+    0x0308: [['Kak Behind Gate -> Death Mountain'], "{}", 0x13],
+    0x030B: [['Death Mountain -> Goron City'], "{}", 0x13],
+    0x030C: [['Hyrule Field -> ZR Front'], "{}", 0x13],
+    # 0x030E: [['Zoras Fountain -> ZD Behind King Zora'], "zf->zd: {}", 0x13], # ZF pointing into ZD (DUPLICATE IN ZD) - leave this ID and associate the sign actor in ZF to 0x9004
+    0x9004: [['Zoras Fountain -> ZD Behind King Zora'], "mega dong: {}", 0x13],
+    0x0314: [['Kokiri Forest -> Lost Woods'], "{}", 0x13],
+    0x0315: [['Hyrule Field -> Lon Lon Ranch'], "{}", 0x13],
+    0x0316: [['Hyrule Field -> Lon Lon Ranch'], "{}", 0x13],
+    0x0317: [['Hyrule Field -> Lake Hylia'], "{}", 0x13],
+    # 0x0319: [['Hyrule Field -> Gerudo Valley'], "{}", 0x13], # This sign is also in gf pointing to gv
+    0x031C: [['GF Outside Gate -> Wasteland Near Fortress'], "{}", 0x13], # hw if you chase a mirage... MAKE SUR EITS NOT IN COLOSSSUS
+    0x0320: [['Kokiri Forest -> LW Bridge From Forest'], "{}", 0x13],
+    0x0321: [['Death Mountain -> Goron City'], "Follow the trail along the edge of\x01the cliff and you will reach\x01{}", 0x13],
+    0x0323: [['Death Mountain Summit -> DMC Upper Local'], "Death Mountain Summit\x01Entrance to {}\x01ahead", 0x13], # Color 'Death Mountain Summit'
+    0x0339: [['Hyrule Field -> Market Entrance', 'Hyrule Field -> Lon Lon Ranch'], "{}\x01{}", 0x13], # Sign outside of Kokiri Forest in Hyrule Field
+    0x033A: [['Hyrule Field -> Market Entrance', 'Hyrule Field -> Lon Lon Ranch'], "You are here: {}\x01This way to {}", 0x13], # Sign between market and llr
+    0x6069: [['GV Fortress Side -> Gerudo Fortress'], "{} is located beyond this gate.\x01A kid like you has no business there.", 0x13],
 }
 
 SPECIAL_OW_SIGNS = {
-    # 0x033A: you are here: hyrule castle this way to lon lon Ranch (this should have the market and llr entrances on it)
-    #0x4003: 
+    #0x4003: # lake owl
         #What are you doing? You've come 
         #a long way to get up here...You should look at the Map 
         #Subscreen sometimes.
@@ -85,7 +95,6 @@ SPECIAL_OW_SIGNS = {
         #I'm on my way back to the castle.
         #If you want to come with me, hold
         #on to my talons!
-    # 0x0339: hyrule castle lon lon Ranch (in field after leaving kokiri)
     #DMT owl
 }
 
@@ -147,63 +156,89 @@ REGION_NAMES = {
     'Kak Potion Shop Back': "\x05\44Potion Shop\x05\40",
 
     # Overworld - THESE SHOULD ALL BE COLORED APPROPRIATELY
-    'Kokiri Forest': "\x05\40Kokiri Forest\x05\x40",
-    'LW Bridge From Forest': "\x05\40Lost Woods Bridge\x05\x40",
-    'LW Bridge': "\x05\40Lost Woods Bridge\x05\x40",
-    'Lost Woods': "\x05\40Lost Woods\x05\x40",
-    'LW Forest Exit': "\x05\40Lost Woods\x05\x40", # Is this right?
-    'GC Woods Warp': "\x05\40Goron City\x05\x40",
-    'Zora River': "\x05\40Zora River\x05\x40",
-    'LW Beyond Mido': "\x05\40Lost Woods\x05\x40",
-    'SFM Entryway': "\x05\40Sacred Forest Meadow\x05\x40",
-    'Hyrule Field': "\x05\40Hyrule Field\x05\x40",
-    'Lake Hylia': "\x05\40Lake Hylia\x05\x40",
-    'Gerudo Valley': "\x05\40Gerudo Valley\x05\x40",
-    'Market Entrance': "\x05\40Market Entrance\x05\x40",
-    'Kakariko Village': "\x05\40Kakariko Village\x05\x40",
-    'ZR Front': "\x05\40Zora River\x05\x40",
-    'Lon Lon Ranch': "\x05\40Lon Lon Ranch\x05\x40",
-    'Zoras Domain': "\x05\40Zora's Domain\x05\x40",
-    'GV Fortress Side': "\x05\40Gerudo Valley\x05\x40",
-    'Gerudo Fortress': "\x05\40Gerudo Fortress\x05\x40",
-    'GF Outside Gate': "\x05\40Gerudo Fortress\x05\x40",
-    'Wasteland Near Fortress': "\x05\40Haunted Wasteland\x05\x40",
-    'Wasteland Near Colossus': "\x05\40Haunted Wasteland\x05\x40",
-    'Desert Colossus': "\x05\40Desert Colossus\x05\x40",
-    'Market': "\x05\40Market\x05\x40",
-    'Castle Grounds': "\x05\40Castle Grounds\x05\x40",
-    'ToT Entrance': "\x05\40Temple of Time Entrance\x05\x40",
-    'Graveyard': "\x05\40Graveyard\x05\x40",
-    'Kak Behind Gate': "\x05\40Kakariko Village\x05\x40",
-    'Death Mountain': "\x05\40Death Mountain Trail\x05\x40",
-    'Goron City': "\x05\40Goron City\x05\x40",
-    'GC Darunias Chamber': "\x05\40Goron City\x05\x40",
-    'DMC Lower Local': "\x05\40Death Mountain Crater\x05\x40",
-    'DMC Lower Nearby': "\x05\40Death Mountain Crater\x05\x40",
-    'Death Mountain Summit': "\x05\40Death Mountain Trail\x05\x40", # I think...
-    'DMC Upper Local': "\x05\40Death Mountain Crater\x05\x40",
-    'DMC Upper Nearby': "\x05\40Death Mountain Crater\x05\x40",
-    'ZR Behind Waterfall': "\x05\40Zora River\x05\x40",
-    'Zoras Domain': "\x05\40Zora's Domain\x05\x40",
-    'ZD Behind King Zora': "\x05\40Zora's Domain\x05\x40",
-    'Zoras Fountain': "\x05\40Zora's Fountain\x05\x40",
-    'LH Owl Flight': "\x05\40Lake Hylia\x05\x40",
-    'DMT Owl Flight': "\x05\40Death Mountain Trail\x05\x40",
-    'Kak Impas Ledge': "\x05\40Kakariko Village\x05\x40",
+    'Kokiri Forest': "\x05\41Kokiri Forest\x05\x40",
+
+    'LW Bridge From Forest': "\x05\42Lost Woods Bridge\x05\x40",
+    'LW Bridge':             "\x05\42Lost Woods Bridge\x05\x40",
+
+    'Lost Woods':     "\x05\42Lost Woods\x05\x40",
+    'LW Forest Exit': "\x05\42Lost Woods\x05\x40", # Is this right?
+    'LW Beyond Mido': "\x05\42Lost Woods\x05\x40",
+
+    'GC Woods Warp':       "\x05\41Goron City\x05\x40",
+    'Goron City':          "\x05\41Goron City\x05\x40",
+    'GC Darunias Chamber': "\x05\41Goron City\x05\x40",
+
+    'Zora River':          "\x05\43Zora River\x05\x40",
+    'ZR Front':            "\x05\43Zora River\x05\x40",
+    'ZR Behind Waterfall': "\x05\43Zora River\x05\x40",
+
+    'SFM Entryway': "\x05\41Sacred Forest Meadow\x05\x40",
+
+    'Hyrule Field': "\x05\44Hyrule Field\x05\x40",
+
+    'Lake Hylia':    "\x05\43Lake Hylia\x05\x40",
+    'LH Owl Flight': "\x05\43Lake Hylia\x05\x40",
+
+    'Gerudo Valley':    "\x05\46Gerudo Valley\x05\x40",
+    'GV Fortress Side': "\x05\46Gerudo Valley\x05\x40",
+
+    'Market Entrance': "\x05\44Market Entrance\x05\x40",
+
+    'Kakariko Village': "\x05\45Kakariko Village\x05\x40",
+    'Kak Behind Gate':  "\x05\45Kakariko Village\x05\x40",
+    'Kak Impas Ledge':  "\x05\45Kakariko Village\x05\x40",
+
+    'Lon Lon Ranch': "\x05\46Lon Lon Ranch\x05\x40",
+
+    'Zoras Domain':        "\x05\43Zora's Domain\x05\x40",
+    'ZD Behind King Zora': "\x05\43Zora's Domain\x05\x40",
+
+    'Gerudo Fortress': "\x05\41Gerudo Fortress\x05\x40",
+    'GF Outside Gate': "\x05\41Gerudo Fortress\x05\x40",
+
+    'Wasteland Near Fortress': "\x05\46Haunted Wasteland\x05\x40",
+    'Wasteland Near Colossus': "\x05\46Haunted Wasteland\x05\x40",
+
+    'Desert Colossus': "\x05\44Desert Colossus\x05\x40",
+
+    'Market': "\x05\44Market\x05\x40",
+
+    'Castle Grounds': "\x05\44Castle Grounds\x05\x40",
+
+    'ToT Entrance': "\x05\44Temple of Time Entrance\x05\x40",
+
+    'Graveyard': "\x05\45Graveyard\x05\x40",
+
+    'Death Mountain':        "\x05\41Death Mountain Trail\x05\x40",
+    'Death Mountain Summit': "\x05\41Death Mountain Trail\x05\x40", # I think...
+    'DMT Owl Flight':        "\x05\41Death Mountain Trail\x05\x40",
+
+    'DMC Lower Local':  "\x05\41Death Mountain Crater\x05\x40",
+    'DMC Lower Nearby': "\x05\41Death Mountain Crater\x05\x40",
+    'DMC Upper Local':  "\x05\41Death Mountain Crater\x05\x40",
+    'DMC Upper Nearby': "\x05\41Death Mountain Crater\x05\x40",
+
+    'Zoras Fountain': "\x05\43Zora's Fountain\x05\x40",
+
 
     # Grotto
     # Fill these in eventually, not needed until I worry about mixed pools
 }
 
 
-
 def replace_overworld_signs(messages, world):
     SIGNS = {**INDOORS_SIGNS, **OW_SIGNS, **DUNGEON_SIGNS}
 
+    testid = 0x030f
+    print('--------------------------------')
+    print(get_message_by_id(messages, testid))
+    print('--------------------------------')
+
     for sign_id, entrance_info in SIGNS.items():
-        entrance_list = entrance_info[0]
-        sign_text = entrance_info[1]
+        entrance_list, sign_text, opts = entrance_info
         destination_list = [world.get_entrance(entr).connected_region.name for entr in entrance_list]
+
 
         # Replace the text with cleaner, formatted text
         for idx in range(len(destination_list)):
@@ -215,12 +250,9 @@ def replace_overworld_signs(messages, world):
             destination_list[idx] = clean_dest
 
         # Update the messages table
-        update_message_by_id(messages, sign_id, sign_text.format(*destination_list))
+        update_message_by_id(messages, sign_id, sign_text.format(*destination_list), opts) # Opts at the end are the text box type and position values WRAP THIS INTO THE TABLE ABOVE
 
 
-        # try:
-        #     destination = REGION_NAMES[world.get_entrance(entrance[0]).connected_region.name]
-        # except KeyError:
-        #     destination = world.get_entrance(entrance[0]).connected_region.name
-        #     print("MISSING REGION NAME: " + destination)
-        # update_message_by_id(messages, sign_id, entrance[1]%destination)
+    print('--------------------------------')
+    print(get_message_by_id(messages, testid))
+    print('--------------------------------')
