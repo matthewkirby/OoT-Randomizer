@@ -15,7 +15,6 @@ from Messages import update_message_by_id, get_message_by_id
 # - Fix the doors no longer being locked after changing msg
 # - Deal with the front/back kak potion shop doors
 # - Write a function to center text
-# - Make a dict of easy to change locations (i.e. fort -> gtg is only queried once and then that is referenced everywhere that entrance is needed. This hsould ease future maintenence)
 
 
 # Dictionary to convert OoTR names for entrances into english for use in SIGN_LIST below
@@ -90,7 +89,7 @@ SIGN_LIST = {
     # The kak potion shop doors read the same message, have the same scene, and the same actor_id. How do I tell them apart??
     # 0x020E: [['kak pot front'],                     0x20,   'indoor',   "{}\x01Closed until morning"], # Kak Potion Shop at night (msg 0290 and 0293 splits off here)
     0x0290: [['market pot'],                        0x20,   'indoor',       "{}\x01Closed until morning"], # New message for Market Potion shop at night
-    # 0x0293: [['kak pot back']], # New message for Kak potion shop back at night
+    # 0x0293: [['kak pot back'],                      0x20,   'indoor',       "{}\x01Closed until morning"], # New message for Kak potion shop back at night
     0x020F: [['kak shooting'],                      0x20,   'indoor',       "{}\x01Open only during the day"], # Kak shooting gallery at night (msg 0291 splits off here)
     0x0291: [['market shooting'],                   0x20,   'indoor',       "{}\x01Open only during the day"], # New message for Market shooting gallery at night
     0x0210: [['mask shop'],                         0x20,   'indoor',       "{}\x01Now hiring part-time\x01Apply during the day"], # Mask shop at night
@@ -146,8 +145,8 @@ REGION_NAMES = {
     "\x05\43Water Temple\x05\40":               ['Water Temple Lobby'],
     "\x05\46Spirit Temple\x05\40":              ['Spirit Temple Lobby'],
     "\x05\45Shadow Temple\x05\40":              ['Shadow Temple Entryway'],
-    "\x05\41Bottom of the Well\x05\40":         ['Bottom of the Well'],
-    "\x05\43Ice Cavern\x05\40":                 ['Ice Cavern Beginning'],
+    "\x05\45Bottom of the Well\x05\40":         ['Bottom of the Well'],
+    "\x05\44Ice Cavern\x05\40":                 ['Ice Cavern Beginning'],
     "\x05\46Gerudo Training Grounds\x05\40":    ['Gerudo Training Grounds Lobby'],
 
     # Indoors
@@ -239,12 +238,7 @@ sign_actor_table = [
 ]
 
 
-def replace_overworld_signs(messages, world):
-    testid = 0x4003
-    print('--------------------------------')
-    print(get_message_by_id(messages, testid))
-    print('--------------------------------')
-
+def update_entrance_messages(messages, world):
     for sign_id, entrance_info in SIGN_LIST.items():
         entrance_list, opts, category, sign_text = entrance_info
         destination_list = [world.get_entrance(ENTRANCE_REFERENCES[entr]).connected_region.name for entr in entrance_list]
@@ -266,8 +260,4 @@ def replace_overworld_signs(messages, world):
 
         # Update the messages table
         teststr = entrance_list[0]+"\x01"
-        update_message_by_id(messages, sign_id, teststr+sign_text.format(*destination_list), opts) # Opts at the end are the text box type and position values WRAP THIS INTO THE TABLE ABOVE
-
-    print('--------------------------------')
-    print(get_message_by_id(messages, testid))
-    print('--------------------------------')
+        update_message_by_id(messages, sign_id, teststr+sign_text.format(*destination_list), opts)

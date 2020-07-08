@@ -20,7 +20,7 @@ from OcarinaSongs import replace_songs
 from MQ import patch_files, File, update_dmadata, insert_space, add_relocations
 from SaveContext import SaveContext
 import StartingItems
-from SignUpdater import replace_overworld_signs, sign_actor_table
+from SignUpdater import update_entrance_messages, sign_actor_table
 
 
 def patch_rom(spoiler:Spoiler, world:World, rom:Rom):
@@ -1678,8 +1678,8 @@ def patch_rom(spoiler:Spoiler, world:World, rom:Rom):
     write_shop_items(rom, shop_item_file.start + 0x1DEC, shop_items)
 
     # Replace the signs and dialogue to reflect entrance randomizer
-    replace_overworld_signs(messages, world)
-    revise_entrance_signs(rom)
+    update_entrance_messages(messages, world)
+    update_entrance_msg_actors(rom)
 
     permutation = None
 
@@ -1934,7 +1934,7 @@ def count_zero_bits(num):
         count += 1
     return count
 
-def revise_entrance_signs(rom):
+def update_entrance_msg_actors(rom):
     def change_sign_msg(rom, actor_id, actor, scene):
         for sign in sign_actor_table:
             # Match actor id and scene
