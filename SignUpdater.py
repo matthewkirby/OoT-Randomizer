@@ -14,9 +14,9 @@ from Messages import update_message_by_id, get_message_by_id
 # - Fix the doors no longer being locked after changing msg
 # - Deal with the front/back kak potion shop doors
 # - Write a function to center text
-# - Add grotto region names
+# - Make a dict of easy to change locations (i.e. fort -> gtg is only queried once and then that is referenced everywhere that entrance is needed. This hsould ease future maintenence)
 
-#   id      Entrance list                                                   opts    category    Message
+#   id      Entrance list                                                   opts    category        Message
 SIGN_LIST = {
     # Dungeon
     0x0307: [['Kakariko Village -> Bottom of the Well'],                    0x13,   'dungeon',      "Dark! Narrow! Scary!\x01{}"], # Square sign in front of well
@@ -156,6 +156,20 @@ REGION_NAMES = {
 
     # Grottos
     "Royal Family's Tomb":                      ['Graveyard Composers Grave'],
+    "Dampe's Grave":                            ['Graveyard Dampes Grave'],
+    "Wolfos Grotto":                            ['SFM Wolfos Grotto'],
+    "Redead Grotto":                            ['Kak Redead Grotto'],
+    "Deku Scrub Grotto":                        ['GV Storms Grotto', 'Colossus Grotto', 'LLR Grotto', 'SFM Storms Grotto', 'HF Inside Fence Grotto', 'GC Grotto', 'DMC Hammer Grotto', 'LW Scrubs Grotto', 'LH Grotto', 'ZR Storms Grotto'],
+    "Tektite Grotto":                           ['HF Tektite Grotto'],
+    "Deku Theater":                             ['Deku Theater'],
+    "Generic Grotto":                           ['KF Storms Grotto', 'HF Near Market Grotto', 'HF Southeast Grotto', 'ZR Open Grotto', 'DMC Upper Grotto', 'Kak Open Grotto', 'DMT Storms Grotto', 'LW Near Shortcuts Grotto', 'HF Open Grotto'],
+    "Fairy Fountain":                           ['SFM Fairy Grotto', 'HF Fairy Grotto', 'ZD Storms Grotto', 'GF Storms Grotto', 'ZR Fairy Grotto'],
+    "Octorok Grotto":                           ['GV Octorok Grotto'],
+    "Skulltula Grotto":                         ['HF Near Kak Grotto', 'HC Storms Grotto'],
+    "Shield Grave":                             ['Graveyard Shield Grave'],
+    "Redead Grave":                             ['Graveyard Heart Piece Grave'],
+    "Cow Grotto":                               ['DMT Cow Grotto'],
+    "Spider Cow Grotto":                        ['HF Cow Grotto'],
 }
 
 SignActor = namedtuple('SignActor', ['origmsg', 'newmsg', 'actor_id', 'scene', 'mask', 'actorprops'])
