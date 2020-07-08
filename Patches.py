@@ -20,7 +20,7 @@ from OcarinaSongs import replace_songs
 from MQ import patch_files, File, update_dmadata, insert_space, add_relocations
 from SaveContext import SaveContext
 import StartingItems
-from SignUpdater import replace_overworld_signs
+from SignUpdater import replace_overworld_signs, sign_actor_table
 
 
 def patch_rom(spoiler:Spoiler, world:World, rom:Rom):
@@ -1536,9 +1536,6 @@ def patch_rom(spoiler:Spoiler, world:World, rom:Rom):
         # Update grotto actors based on their new entrance
         set_grotto_shuffle_data(rom, world)
 
-    if True: # This should be changed later to check for entrance randomizer
-        replace_overworld_signs(messages, world)
-
     if world.shuffle_cows:
         rom.write_byte(rom.sym('SHUFFLE_COWS'), 0x01)
         # Move some cows because they are too close from each other in vanilla
@@ -1679,6 +1676,10 @@ def patch_rom(spoiler:Spoiler, world:World, rom:Rom):
     update_message_by_id(messages, 0x00F8, tycoon_message, 0x23)
 
     write_shop_items(rom, shop_item_file.start + 0x1DEC, shop_items)
+
+    # Replace the signs and dialogue to reflect entrance randomizer
+    replace_overworld_signs(messages, world)
+    revise_entrance_signs(rom)
 
     permutation = None
 
@@ -1925,6 +1926,32 @@ def set_cow_id_data(rom, world):
 
     get_actor_list(rom, set_cow_id)
 
+
+def count_zero_bits(num):
+    count = 0
+    while (num & 1) == 0:
+        num = num >> 1
+        count += 1
+    return count
+
+def revise_entrance_signs(rom):
+    def change_sign_msg(rom, actor_id, actor, scene):
+        for sign in sign_actor_table:
+            # Match actor id and scene
+            if actor_id == sign.actor_id and scene == sign.scene:
+                actor_var = rom.read_int16(actor + 14)
+                shift = count_zero_bits(sign.mask)
+                actor_msg = (actor_var & sign.mask) >> shift
+                # Match sign message and other actor properties
+                if actor_msg == sign.origmsg and sign.actorprops is None:
+                    new_var = (actor_var & ~sign.mask) + (sign.newmsg << shift)
+                elif actor_msg == sign.origmsg and (actor_var & sign.actorprops[0]) >> count_zero_bits(sign.actorprops[0]) == sign.actorprops[1]:
+                    new_var = (actor_var & ~sign.mask) + (sign.newmsg << shift)
+                else:
+                    continue
+                rom.write_int16(actor + 14, new_var)
+
+    get_actor_list(rom, change_sign_msg)
 
 def set_grotto_shuffle_data(rom, world):
     def override_grotto_data(rom, actor_id, actor, scene):
