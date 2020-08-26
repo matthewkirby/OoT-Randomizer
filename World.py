@@ -180,7 +180,7 @@ class World(object):
             self.starting_tod = random.choice(choices)
             self.randomized_list.append('starting_tod')
         if self.starting_age == 'random':
-            if self.settings.open_forest == 'closed':
+            if self.open_forest == 'closed':
                 # adult is not compatible
                 self.starting_age = 'child'
             else:
